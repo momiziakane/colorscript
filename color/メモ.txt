@@ -1,0 +1,133 @@
+
+
+自分以外の環境でちゃんと動くかは分からない。
+置いとくだけ。
+
+
+
+
+colorをscriptファイルに入れる。
+
+
+Aviutl\script\color みたいな。
+
+
+
+@RGB操作
+RGBの値をトラックで操作できる。
+トラック
+--track0:赤,0,100,0
+--track1:緑,0,100,0
+--track2:青,0,100,0
+式
+ r = r * track0 / 100
+ g = g * track1 / 100
+ b = b * track2 / 100
+
+
+@RGB明るさ
+RGBの対応する色を明るくする。
+トラック
+--track0:赤明るさ,-100,100,0
+--track1:緑明るさ,-100,100,0
+--track2:青明るさ,-100,100,0
+式
+ f = r * track0 / 100 + g * track1 / 100 + b * track2 / 100
+ r = r + f
+ g = g + f
+ b = b + f
+
+
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+colordll.cppの中身。
+dllの中身とも言える。
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+#define NOMINMAX
+#include <windows.h>
+#include <algorithm>
+
+extern "C" {
+#include "lua.h"
+#include "lauxlib.h"
+}
+
+
+
+int add(lua_State* L)
+{
+    DWORD* data = (DWORD*)lua_touserdata(L, 1);
+    int w = (int)lua_tonumber(L, 2);
+    int h = (int)lua_tonumber(L, 3);
+    double track0 = lua_tonumber(L, 4);
+    double track1 = lua_tonumber(L, 5);
+    double track2 = lua_tonumber(L, 6);
+
+
+    lua_settop(L, 1);
+
+
+    for (DWORD i = 0; i < w * h; i++) {
+
+        BYTE r = (data[i] >> 16) & 0xFF;
+        BYTE g = (data[i] >> 8) & 0xFF;
+        BYTE b = data[i] & 0xFF;
+        BYTE a = (data[i] >> 24) & 0xFF;
+        r = r * track0 / 100;
+        g = g * track1 / 100;
+        b = b * track2 / 100;
+
+
+        data[i] = (r << 16) | (g << 8) | b | (a << 24);
+    }
+    return 1;
+}
+
+int add2(lua_State* L)
+{
+    DWORD* data = (DWORD*)lua_touserdata(L, 1);
+    int w = (int)lua_tonumber(L, 2);
+    int h = (int)lua_tonumber(L, 3);
+    double track0 = lua_tonumber(L, 4);
+    double track1 = lua_tonumber(L, 5);
+    double track2 = lua_tonumber(L, 6);
+
+
+    lua_settop(L, 1);
+
+
+    for (DWORD i = 0; i < w * h; i++) {
+
+        BYTE r = (data[i] >> 16) & 0xFF;
+        BYTE g = (data[i] >> 8) & 0xFF;
+        BYTE b = data[i] & 0xFF;
+        BYTE a = (data[i] >> 24) & 0xFF;
+        double f = r * track0 / 100 + g * track1 / 100 + b * track2 / 100;
+        r = (BYTE)std::max(0.0, std::min(r + f, 255.0));
+        g = (BYTE)std::max(0.0, std::min(g + f, 255.0));
+        b = (BYTE)std::max(0.0, std::min(b + f, 255.0));
+
+
+
+        data[i] = (r << 16) | (g << 8) | b | (a << 24);
+    }
+    return 1;
+}
+
+
+extern "C" __declspec(dllexport)
+int luaopen_colordll(lua_State* L)
+{
+    luaL_Reg funcs[] = { {"add", add},{"add2", add2}, {NULL, NULL} };
+    luaL_register(L, "colordll", funcs);
+    return 1;
+}
+
+
+
+
