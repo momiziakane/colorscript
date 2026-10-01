@@ -1,0 +1,30 @@
+@RGB‘€ì
+--track0:Ô,0,100,0
+--track1:—Î,0,100,0
+--track2:Â,0,100,0
+
+
+
+
+local mydll = require("colordll")
+local data, w, h = obj.getpixeldata()
+
+
+obj.putpixeldata(mydll.add(data, w, h, obj.track0, obj.track1, obj.track2))
+
+
+@RGB–¾‚é‚³
+--track0:Ô–¾‚é‚³,-100,100,0
+--track1:—Î–¾‚é‚³,-100,100,0
+--track2:Â–¾‚é‚³,-100,100,0
+
+
+
+
+local mydll = require("colordll")
+local data, w, h = obj.getpixeldata()
+
+
+obj.putpixeldata(mydll.add2(data, w, h, obj.track0, obj.track1, obj.track2))
+
+
